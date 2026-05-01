@@ -1,43 +1,33 @@
 package ascii
 
-import (
-	"bufio"
-	"fmt"
-	"os"
-)
+import "strings"
 
-func LoadBanner(filename string) (map[rune][]string, error) {
-	file, err := os.Open(filename)
+const Height = 8
+
+func Generate(input string, bannerPath string) (string, error) {
+	banner, err := LoadBanner(bannerPath)
 	if err != nil {
-		return nil, fmt.Errorf("could not open banner file: %v", err)
+		return "", err
 	}
-	defer file.Close()
 
-	scanner := bufio.NewScanner(file)
-	bannerMap := make(map[rune][]string)
+	lines := strings.Split(input, "\\n")
+	var result strings.Builder
 
-	currentChar := rune(32)
-	var currentLines []string
-
-	for scanner.Scan() {
-		line := scanner.Text()
-
-		if line == "" && len(currentLines) == 0 {
+	for _, line := range lines {
+		if line == "" {
+			result.WriteString("\n")
 			continue
 		}
 
-		currentLines = append(currentLines, line)
-
-		if len(currentLines) == 8 {
-			bannerMap[currentChar] = currentLines
-			currentLines = nil
-			currentChar++
+		for i := 0; i < Height; i++ {
+			for _, ch := range line {
+				if art, ok := banner[ch]; ok {
+					result.WriteString(art[i])
+				}
+			}
+			result.WriteString("\n")
 		}
 	}
 
-	if err := scanner.Err(); err != nil {
-		return nil, fmt.Errorf("error reading banner file: %v", err)
-	}
-
-	return bannerMap, nil
+	return result.String(), nil
 }
